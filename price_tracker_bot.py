@@ -20,10 +20,17 @@ product_urls = [
     "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1200-mm-3-blade-ceiling-fan/p/itme0dfe1a5d5737"
 ]
 
-# 📤 Send Telegram message (async)
-async def send_telegram_message(message):
+# 📤 Send Telegram message (async) with improved formatting
+async def send_telegram_message(product_url, price):
     try:
-        await bot.send_message(chat_id=CHAT_ID, text=message)
+        message = (
+            "⚠️ *Price Drop Alert!*\n\n"
+            "🔥 A tracked product just changed price!\n\n"
+            f"🛒 [View Product]({product_url})\n"
+            f"💸 *New Price:* {price}\n\n"
+            "✅ Buy fast!"
+        )
+        await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="Markdown")
     except Exception as e:
         print(f"⚠️ Telegram send error: {e}")
 
@@ -62,7 +69,7 @@ async def check_price():
 
             if price:
                 print(f"✅ Price for:\n{url}\nis {price}")
-                await send_telegram_message(f"🛒 Price for:\n{url}\nis {price}")
+                await send_telegram_message(url, price)
             else:
                 print(f"❌ Could not extract price for {url}")
         except Exception as e:
