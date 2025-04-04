@@ -11,7 +11,7 @@ API_TOKEN = "7866528662:AAHjd1BAefRm0RBYvy_KPql23HqMAx__VNI"
 CHAT_ID = "163447880"
 bot = Bot(token=API_TOKEN)
 
-# List of product URLs
+# Flipkart product URLs (all Orient 1200mm fans)
 PRODUCT_URLS = [
     "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1-1200-mm-3-blade-ceiling-fan/p/itmfaf147854846b",
     "https://www.flipkart.com/orient-electric-ujala-air-1-star-1200-mm-3-blade-ceiling-fan/p/itm86c3958e8a4e0",
@@ -23,12 +23,16 @@ def get_browser():
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    return webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
+    # Correct way to initialize driver (no executable_path)
+    driver = webdriver.Chrome(
+        ChromeDriverManager().install(),
+        options=chrome_options
+    )
+    return driver
 
 def get_price_from_flipkart(browser, url):
     browser.get(url)
     time.sleep(3)  # wait for page to load
-
     try:
         price_element = browser.find_element(By.CSS_SELECTOR, "._30jeq3")
         return price_element.text.strip()
@@ -50,7 +54,6 @@ def check_price():
         except Exception as e:
             message = f"❌ Could not get price from {url}\nReason: {e}"
             print(message)
-        
         try:
             asyncio.run(send_telegram_alert(bot, message))
         except Exception as e:
