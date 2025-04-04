@@ -29,19 +29,19 @@ def get_browser():
     chrome_options.add_argument("--disable-gpu")
     return webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
 
-def get_price(browser, url):
-    try:
-        browser.get(url)
-        wait = WebDriverWait(browser, 10)
-        price_element = wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "._30jeq3, .aMaAEs .dyC4hf, .aMaAEs ._16Jk6d")
-        ))
-        price_text = price_element.text.strip().replace("₹", "").replace(",", "")
-        return int(float(price_text))
-    except Exception as e:
-        print(f"❌ Could not get price from {url}")
-        print(f"Reason: {e}")
-        return None
+from selenium.webdriver.chrome.service import Service
+
+def get_browser():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+
+    # Use Service object for newer Selenium versions
+    service = Service(ChromeDriverManager().install())
+    return webdriver.Chrome(service=service, options=chrome_options)
+
 
 def check_price():
     browser = get_browser()
