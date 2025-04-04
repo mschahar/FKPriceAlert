@@ -11,8 +11,8 @@ bot = Bot(token=TELEGRAM_TOKEN)
 
 # Flipkart products to track: {url: target_price}
 products = {
-    "https://www.flipkart.com/apple-iphone-13-blue-128-gb/p/itm6e30c6ee1c551": 50000,
-    "https://www.flipkart.com/samsung-galaxy-s21-fe-5g-graphite-128-gb/p/itm5d6c7f1b54dc0": 30000
+    "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1-1200-mm-3-blade-ceiling-fan/p/itmfaf147854846b": 1099,
+    "https://www.flipkart.com/orient-electric-ujala-air-1-star-1200-mm-3-blade-ceiling-fan/p/itm86c3958e8a4e0": 1099
 }
 
 HEADERS = {
