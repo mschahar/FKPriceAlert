@@ -18,9 +18,8 @@ PRODUCT_URLS = [
 ]
 
 # Set your Telegram bot token and chat ID
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
-
+TELEGRAM_TOKEN = "7866528662:AAHjd1BAefRm0RBYvy_KPql23HqMAx__VNI"
+TELEGRAM_CHAT_ID = "163447880"
 def get_browser():
     chrome_options = Options()
     chrome_options.add_argument("--headless")
