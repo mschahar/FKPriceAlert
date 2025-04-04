@@ -9,7 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from telegram import Bot
 
 # 🔧 Hardcoded Telegram Bot Details
-TOKEN = "7866528662:AAHjd1BAefRm0RBYvy_KPql23HhMAx__VNI"
+TOKEN = "7866528662:AAFZhfnmx613vezBMjcbpYKzvvpQHhdMYAw"
 CHAT_ID = "163447880"
 bot = Bot(token=TOKEN)
 
