@@ -24,11 +24,11 @@ product_urls = [
 async def send_telegram_message(product_url, price):
     try:
         message = (
-            "⚠️ *Price Drop Alert!*\n\n"
-            "🔥 A tracked product just changed price!\n\n"
-            f"🛒 [View Product]({product_url})\n"
-            f"💸 *New Price:* {price}\n\n"
-            "✅ Buy fast!"
+            "⚠️〽️ *Price Drop Alert!*\n\n"
+            "🔥💰 A tracked product just changed price!\n\n"
+            f"🛒⏩ [View Product]({product_url})\n"
+            f"💸🤑 *New Price:* {price}\n\n"
+            "✅🛍️ Buy fast!"
         )
         await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="Markdown")
     except Exception as e:
