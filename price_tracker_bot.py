@@ -70,3 +70,5 @@ def check_price():
 
 if __name__ == "__main__":
     check_price()
+    send_telegram_message("✅ Flipkart price tracker script finished running.")
+
