@@ -24,9 +24,9 @@ product_urls = [
 ]
 
 target_prices = {
-    product_urls[0]: 1300,
-    product_urls[1]: 1200,
-    product_urls[2]: 1300
+    product_urls[0]: 1100,
+    product_urls[1]: 1100,
+    product_urls[2]: 1100
 }
 
 # 📤 Send Telegram message
