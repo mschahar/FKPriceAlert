@@ -8,19 +8,26 @@ from selenium.common.exceptions import NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram import Bot
 
-# 🔧 Hardcoded Telegram Bot Details
+# 🔧 Telegram Bot Details
 TOKEN = "7866528662:AAFZhfnmx613vezBMjcbpYKzvvpQHhdMYAw"
 CHAT_ID = "163447880"
 bot = Bot(token=TOKEN)
 
-# 🔗 Product URLs to track
+# 🔗 Products and Target Prices
 product_urls = [
     "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1-1200-mm-3-blade-ceiling-fan/p/itmfaf147854846b",
     "https://www.flipkart.com/orient-electric-ujala-air-1-star-1200-mm-3-blade-ceiling-fan/p/itm86c3958e8a4e0",
     "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1200-mm-3-blade-ceiling-fan/p/itme0dfe1a5d5737"
 ]
 
-# 📤 Send Telegram message (async) with improved formatting
+# 🎯 Set your desired max price for each product (in ₹)
+target_prices = {
+    product_urls[0]: 1300,
+    product_urls[1]: 1200,
+    product_urls[2]: 1300
+}
+
+# 📤 Send Telegram message (async)
 async def send_telegram_message(product_url, price):
     try:
         message = (
@@ -50,7 +57,11 @@ def extract_price_from_page_source(page_source):
         return match.group()
     return None
 
-# 🧪 Check price for all products
+# 💵 Convert ₹1,399 → 1399
+def parse_price(price_str):
+    return int(re.sub(r"[^\d]", "", price_str))
+
+# 🧪 Check prices
 async def check_price():
     browser = get_browser()
     for url in product_urls:
@@ -62,14 +73,19 @@ async def check_price():
 
             try:
                 price_elem = browser.find_element("css selector", "._30jeq3")
-                price = price_elem.text
+                price_str = price_elem.text
             except NoSuchElementException:
                 print("⚠️ Falling back to regex scan")
-                price = extract_price_from_page_source(browser.page_source)
+                price_str = extract_price_from_page_source(browser.page_source)
 
-            if price:
-                print(f"✅ Price for:\n{url}\nis {price}")
-                await send_telegram_message(url, price)
+            if price_str:
+                price_int = parse_price(price_str)
+                print(f"✅ Price for:\n{url}\nis ₹{price_int}")
+
+                if price_int <= target_prices[url]:
+                    await send_telegram_message(url, price_int)
+                else:
+                    print(f"ℹ️ Price ₹{price_int} is above your target ₹{target_prices[url]} — no alert.")
             else:
                 print(f"❌ Could not extract price for {url}")
         except Exception as e:
