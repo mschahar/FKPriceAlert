@@ -12,8 +12,9 @@ bot = Bot(token=TELEGRAM_TOKEN)
 
 # 🔗 Flipkart product URLs and their target prices (in ₹)
 products = {
-    "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1-1200-mm-3-blade-ceiling-fan/p/itmfaf147854846b": 1099,
-    "https://www.flipkart.com/orient-electric-ujala-air-1-star-1200-mm-3-blade-ceiling-fan/p/itm86c3958e8a4e0": 1099
+    "https://dl.flipkart.com/s/xm1vSYNNNN": 1099,
+    "https://dl.flipkart.com/s/xmm2lyNNNN": 1099,
+    "https://dl.flipkart.com/s/kSFcPAuuuN": 1099
 }
 
 # Mimic browser headers to avoid blocks
@@ -26,7 +27,7 @@ def get_with_retry(url, retries=3, delay=5):
     """Try to fetch the URL with retry logic."""
     for attempt in range(1, retries + 1):
         try:
-            return requests.get(url, headers=HEADERS, timeout=15)
+            return requests.get(url, headers=HEADERS, timeout=15, allow_redirects=True)
         except requests.exceptions.RequestException as e:
             print(f"Attempt {attempt} failed for {url}\nReason: {e}")
             time.sleep(delay)
