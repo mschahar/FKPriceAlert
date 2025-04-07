@@ -28,14 +28,14 @@ target_prices = {
     product_urls[0]: 1200,
     product_urls[1]: 1200,
     product_urls[2]: 1200,
-    product_urls[2]: 1200
+    product_urls[3]: 1200
 }
 
 # 📤 Send Telegram message
 async def send_telegram_message(product_url, price):
     try:
         message = (
-            "⚠️〽️ *Price Drop Alert!*\n\n"
+            "⚠️〼️ *Price Drop Alert!*\n\n"
             "🔥💰 A tracked product just changed price!\n\n"
             f"🛒⏩ [View Product]({product_url})\n"
             f"💸🤑 *New Price:* {price}\n\n"
@@ -43,7 +43,7 @@ async def send_telegram_message(product_url, price):
         )
         await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="Markdown")
     except Exception as e:
-        print(f"⚠️ Telegram send error: {e}")
+        print(f"⚠️ Telegram send error for {product_url}: {e}")
 
 # 🚀 Headless browser setup
 def get_browser():
@@ -81,7 +81,7 @@ def extract_price_from_page_source(page_source):
 async def check_price():
     browser = get_browser()
     wait = WebDriverWait(browser, 10)
-    
+
     for url in product_urls:
         print(f"\n🔍 Checking: {url}")
         try:
@@ -109,17 +109,20 @@ async def check_price():
                     print(f"🧪 Fallback page source price: ₹{price}")
 
             if price:
-                if price <= target_prices[url]:
+                if price <= target_prices.get(url, float('inf')):
                     print(f"🎯 Price ₹{price} is within your target → sending alert.")
-                    await send_telegram_message(url, f"₹{price}")
+                    try:
+                        await send_telegram_message(url, f"₹{price}")
+                    except Exception as e:
+                        print(f"❌ Error sending alert for {url}: {e}")
                 else:
-                    print(f"ℹ️ ₹{price} is above your target of ₹{target_prices[url]} — no alert.")
+                    print(f"ℹ️ ₹{price} is above your target of ₹{target_prices.get(url)} — no alert.")
             else:
                 print("❌ Could not extract price.")
 
         except Exception as e:
             print(f"❌ Error checking {url}:\n{e}")
-    
+
     browser.quit()
 
 # ▶️ Run the script
