@@ -20,14 +20,14 @@ product_urls = [
     "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1-1200-mm-3-blade-ceiling-fan/p/itmfaf147854846b",
     "https://www.flipkart.com/orient-electric-ujala-air-1-star-1200-mm-3-blade-ceiling-fan/p/itm86c3958e8a4e0",
     "https://www.flipkart.com/orient-electric-ujala-air-bee-star-rated-1200-mm-3-blade-ceiling-fan/p/itme0dfe1a5d5737",
-    "https://www.flipkart.com/rr-signature-josh-eco-star-rated-bee-certified-energy-efficient-52-watt-high-speed-1-star-1200-mm-3-blade-ceiling-fan/p/itm5c91ceb2beb19"
+    #"https://www.flipkart.com/rr-signature-josh-eco-star-rated-bee-certified-energy-efficient-52-watt-high-speed-1-star-1200-mm-3-blade-ceiling-fan/p/itm5c91ceb2beb19"
 ]
 
 target_prices = {
     product_urls[0]: 1100,
-    product_urls[1]: 1500,
+    product_urls[1]: 1100,
     product_urls[2]: 1100,
-    product_urls[3]: 1200
+    #product_urls[3]: 1200
 }
 
 # 📤 Send Telegram message
