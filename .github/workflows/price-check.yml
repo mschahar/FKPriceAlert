@@ -26,12 +26,11 @@ jobs:
       - name: Set up Chrome
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip xvfb libxi6 libgconf-2-4
-          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxss1 libxcomposite1 libxcursor1 libxdamage1 libxrandr2 libgbm-dev
+          sudo apt-get install -y wget unzip xvfb libnss3 libxss1 libasound2 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libgbm-dev
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt --fix-broken install -y
+          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
           google-chrome --version
 
-      - name: Run tracker script
+      - name: Run price tracker script
         run: |
           python your_script_name.py
