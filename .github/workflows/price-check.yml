@@ -32,4 +32,4 @@ jobs:
           pip install selenium python-telegram-bot webdriver-manager
 
       - name: Run price tracker
-        run: python your_script_name.py  # ⬅️ change to actual filename
+        run: python price_tracker_bot.py  # ⬅️ change to actual filename
