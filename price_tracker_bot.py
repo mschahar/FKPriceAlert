@@ -36,7 +36,7 @@ async def send_telegram_message(product_url, price):
             "⚠️〽️ *Price Drop Alert!*\n\n"
             "🔥💰 A tracked product just changed price!\n\n"
             f"🛒⏩ [View Product]({product_url})\n"
-            f"💸🤑 *New Price:* {price}\n\n"
+            f"💸🤑 *New Price:* ₹{price}\n\n"
             "✅🛍️ Buy fast!"
         )
         await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="Markdown")
@@ -53,9 +53,10 @@ def get_browser():
 
 # 🧠 Regex fallback
 def extract_price_from_page_source(page_source):
-    match = re.search(r'₹\s?[0-9,]+', page_source)
-    if match:
-        return match.group()
+    matches = re.findall(r'₹\s?[0-9,]+', page_source)
+    if matches:
+        print("🔎 Regex fallback prices:", matches)
+        return matches[0]
     return None
 
 # 🔢 Parse ₹1,399 → 1399
@@ -66,33 +67,50 @@ def parse_price(price_str):
 async def check_price():
     browser = get_browser()
     wait = WebDriverWait(browser, 10)
-    
+
     for url in product_urls:
-        print(f"\n🔍 Checking: {url}")
+        print(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] 🔍 Checking: {url}")
         try:
             browser.get(url)
 
+            # 🚫 Check if product is out of stock
             try:
-                # Wait until the price element is visible
-                price_elem = wait.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "._30jeq3"))
-                )
-                price_str = price_elem.text
-                print(f"✅ Found price element: {price_str}")
-            except TimeoutException:
-                print("⚠️ Price element not found, using fallback")
+                stock_status = browser.find_element(By.XPATH, "//*[contains(text(), 'Out of Stock')]")
+                if stock_status:
+                    print("❌ Product is out of stock.")
+                    continue
+            except NoSuchElementException:
+                pass  # No out-of-stock label found
+
+            # ✅ Try multiple selectors for price
+            price_str = None
+            selectors = ["._30jeq3", "._16Jk6d", ".CEmiEU"]
+            for sel in selectors:
+                try:
+                    price_elem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, sel)))
+                    price_str = price_elem.text
+                    if price_str:
+                        print(f"✅ Found price with selector '{sel}': {price_str}")
+                        break
+                except TimeoutException:
+                    continue
+
+            # 🔁 Fallback if price not found
+            if not price_str:
+                print("⚠️ No price element found, trying regex fallback...")
                 price_str = extract_price_from_page_source(browser.page_source)
 
+            # ✅ Price parsed and alert check
             if price_str:
                 price_int = parse_price(price_str)
-                print(f"💰 Price for:\n{url}\n→ ₹{price_int}")
+                print(f"💰 Final Price: ₹{price_int}")
 
                 if price_int <= target_prices[url]:
                     await send_telegram_message(url, price_int)
                 else:
-                    print(f"ℹ️ ₹{price_int} is above your set target of ₹{target_prices[url]} — no alert.")
+                    print(f"ℹ️ ₹{price_int} is above target ₹{target_prices[url]} — no alert.")
             else:
-                print("❌ Could not extract any price at all.")
+                print("❌ Could not extract any valid price.")
 
         except Exception as e:
             print(f"❌ Error checking {url}:\n{e}")
