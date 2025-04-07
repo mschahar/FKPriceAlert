@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram import Bot
 
@@ -51,14 +51,6 @@ def get_browser():
     options.add_argument("--disable-dev-shm-usage")
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-# 🧠 Regex fallback
-def extract_price_from_page_source(page_source):
-    matches = re.findall(r'₹\s?[0-9,]+', page_source)
-    if matches:
-        print("🔎 Regex fallback prices:", matches)
-        return matches[0]
-    return None
-
 # 🔢 Parse ₹1,399 → 1399
 def parse_price(price_str):
     return int(re.sub(r"[^\d]", "", price_str))
@@ -66,55 +58,35 @@ def parse_price(price_str):
 # 🧪 Main price checker
 async def check_price():
     browser = get_browser()
-    wait = WebDriverWait(browser, 10)
+    wait = WebDriverWait(browser, 15)
 
     for url in product_urls:
-        print(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] 🔍 Checking: {url}")
+        print(f"\n🔍 Checking: {url}")
         try:
             browser.get(url)
+            price_elem = wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, '//div[@class="_30jeq3" and not(ancestor::div[contains(@class, "_3I9_wc")])]')
+                )
+            )
+            price_str = price_elem.text
+            price_int = parse_price(price_str)
+            print(f"💰 Price for:\n{url}\n→ ₹{price_int}")
 
-            # 🚫 Check if product is out of stock
-            try:
-                stock_status = browser.find_element(By.XPATH, "//*[contains(text(), 'Out of Stock')]")
-                if stock_status:
-                    print("❌ Product is out of stock.")
-                    continue
-            except NoSuchElementException:
-                pass  # No out-of-stock label found
+            # Filter out junk prices like ₹132 or ₹108
+            if price_int < 500:
+                print(f"❌ Ignoring junk price ₹{price_int}")
+                continue
 
-            # ✅ Try multiple selectors for price
-            price_str = None
-            selectors = ["._30jeq3", "._16Jk6d", ".CEmiEU"]
-            for sel in selectors:
-                try:
-                    price_elem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, sel)))
-                    price_str = price_elem.text
-                    if price_str:
-                        print(f"✅ Found price with selector '{sel}': {price_str}")
-                        break
-                except TimeoutException:
-                    continue
-
-            # 🔁 Fallback if price not found
-            if not price_str:
-                print("⚠️ No price element found, trying regex fallback...")
-                price_str = extract_price_from_page_source(browser.page_source)
-
-            # ✅ Price parsed and alert check
-            if price_str:
-                price_int = parse_price(price_str)
-                print(f"💰 Final Price: ₹{price_int}")
-
-                if price_int <= target_prices[url]:
-                    await send_telegram_message(url, price_int)
-                else:
-                    print(f"ℹ️ ₹{price_int} is above target ₹{target_prices[url]} — no alert.")
+            if price_int <= target_prices[url]:
+                await send_telegram_message(url, price_int)
             else:
-                print("❌ Could not extract any valid price.")
-
+                print(f"ℹ️ ₹{price_int} is above your target of ₹{target_prices[url]} — no alert.")
+        except TimeoutException:
+            print("⚠️ Price element not found.")
         except Exception as e:
             print(f"❌ Error checking {url}:\n{e}")
-    
+
     browser.quit()
 
 # ▶️ Run the script
