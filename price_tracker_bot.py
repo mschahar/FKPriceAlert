@@ -1,6 +1,5 @@
 import asyncio
 import re
-import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -35,7 +34,7 @@ target_prices = {
 async def send_telegram_message(product_url, price):
     try:
         message = (
-            "⚠️〼️ *Price Drop Alert!*\n\n"
+            "⚠️〽️ *Price Drop Alert!*\n\n"
             "🔥💰 A tracked product just changed price!\n\n"
             f"🛒⏩ [View Product]({product_url})\n"
             f"💸🤑 *New Price:* {price}\n\n"
@@ -43,7 +42,7 @@ async def send_telegram_message(product_url, price):
         )
         await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="Markdown")
     except Exception as e:
-        print(f"⚠️ Telegram send error for {product_url}: {e}")
+        print(f"⚠️ Telegram send error: {e}")
 
 # 🚀 Headless browser setup
 def get_browser():
@@ -52,6 +51,31 @@ def get_browser():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+# 🧠 Extract price using latest Flipkart class
+def extract_main_price(driver, wait):
+    try:
+        price_elem = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'div.Nx9bqj.CxhGGd'))
+        )
+        price_str = price_elem.text.strip()
+        price = int(re.sub(r"[^\d]", "", price_str))
+        print(f"✅ Price from new Flipkart class: ₹{price}")
+        return price
+    except Exception:
+        pass
+
+    # Fallback to older class
+    try:
+        price_elem = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'div._30jeq3'))
+        )
+        price_str = price_elem.text.strip()
+        price = int(re.sub(r"[^\d]", "", price_str))
+        print(f"✅ Price from fallback class: ₹{price}")
+        return price
+    except Exception:
+        return None
 
 # 💡 Handle "Or Pay ₹1139 + 60" style prices
 def extract_price_with_coins(driver):
@@ -64,13 +88,13 @@ def extract_price_with_coins(driver):
                 cash = int(match.group(1).replace(',', ''))
                 coins = int(match.group(2))
                 total = cash + coins
-                print(f"💡 Coin-based pricing found: ₹{cash} + {coins} coins = ₹{total}")
+                print(f"💡 Coin-based pricing: ₹{cash} + {coins} coins = ₹{total}")
                 return total
     except:
         pass
     return None
 
-# 🧠 Regex fallback
+# Regex fallback
 def extract_price_from_page_source(page_source):
     match = re.search(r'₹\s?[0-9,]+', page_source)
     if match:
@@ -87,36 +111,25 @@ async def check_price():
         try:
             browser.get(url)
 
-            # First: Try to get coin-based price
+            # 1. Try coin-based
             price = extract_price_with_coins(browser)
 
-            # Second: Try standard price element
+            # 2. Try main classes
             if price is None:
-                try:
-                    price_elem = wait.until(
-                        EC.presence_of_element_located((By.XPATH, '//div[contains(text(),"₹")]'))
-                    )
-                    price_str = price_elem.text
-                    price = int(re.sub(r"[^\d]", "", price_str))
-                    print(f"✅ Found standard price: ₹{price}")
-                except TimeoutException:
-                    print("⚠️ Standard price element not found.")
+                price = extract_main_price(browser, wait)
 
-            # Third: Fallback to page source
+            # 3. Fallback regex
             if price is None:
                 price = extract_price_from_page_source(browser.page_source)
                 if price:
-                    print(f"🧪 Fallback page source price: ₹{price}")
+                    print(f"🧪 Regex fallback price: ₹{price}")
 
             if price:
-                if price <= target_prices.get(url, float('inf')):
-                    print(f"🎯 Price ₹{price} is within your target → sending alert.")
-                    try:
-                        await send_telegram_message(url, f"₹{price}")
-                    except Exception as e:
-                        print(f"❌ Error sending alert for {url}: {e}")
+                if price <= target_prices[url]:
+                    print(f"🎯 Price ₹{price} is within target → alerting.")
+                    await send_telegram_message(url, f"₹{price}")
                 else:
-                    print(f"ℹ️ ₹{price} is above your target of ₹{target_prices.get(url)} — no alert.")
+                    print(f"ℹ️ ₹{price} is above target of ₹{target_prices[url]} — no alert.")
             else:
                 print("❌ Could not extract price.")
 
